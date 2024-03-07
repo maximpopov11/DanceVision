@@ -1,69 +1,95 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import cv2
+import numpy as np
 import mediapipe as mp
-import csv
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from mediapipe.framework.formats import landmark_pb2
 
-def write_landmarks_to_csv(landmarks, frame_number, csv_data):
-    print(f"Landmark coordinates for frame {frame_number}:")
-    for idx, landmark in enumerate(landmarks):
-        print(f"{mp_pose.PoseLandmark(idx).name}: (x: {landmark.x}, y: {landmark.y}, z: {landmark.z})")
-        csv_data.append([frame_number, mp_pose.PoseLandmark(idx).name, landmark.x, landmark.y, landmark.z])
-    print("\n")
+# Model available to download here: https://developers.google.com/mediapipe/solutions/vision/pose_landmarker#models
+model_path = "pose_landmarker_heavy.task"
 
-video_path = 'West Coast Swing - Ben Morris & Brandi Guild - The After Party 2021 -  Invitational Jack & Jill Show.mp4'
-output_csv = 'test'
+video_path = "West Coast Swing - Ben Morris & Brandi Guild - The After Party 2021 -  Invitational Jack & Jill Show.mp4"
 
-# Initialize MediaPipe Pose and Drawing utilities
-mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
-pose = mp_pose.Pose()
-
-# Open the video file
-cap = cv2.VideoCapture(video_path)
-
-frame_number = 0
-csv_data = []
-
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    # Convert the frame to RGB
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    # Process the frame with MediaPipe Pose
-    result = pose.process(frame_rgb)
-
-    # Draw the pose landmarks on the frame
-    if result.pose_landmarks:
-        mp_drawing.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-        # Add the landmark coordinates to the list and print them
-        write_landmarks_to_csv(result.pose_landmarks.landmark, frame_number, csv_data)
-
-    # Display the frame
-    cv2.imshow('MediaPipe Pose', frame)
-
-    # Exit if 'q' key is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-    frame_number += 1
-
-cap.release()
-cv2.destroyAllWindows()
-
-# Save the CSV data to a file
-with open(output_csv, 'w', newline='') as csvfile:
-    csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(['frame_number', 'landmark', 'x', 'y', 'z'])
-    csv_writer.writerows(csv_data)
+num_poses = 4
+min_pose_detection_confidence = 0.3
+min_pose_presence_confidence = 0.3
+min_tracking_confidence = 0.3
 
 
-# In[ ]:
+def draw_landmarks_on_image(rgb_image, detection_result):
+    pose_landmarks_list = detection_result.pose_landmarks
+    annotated_image = np.copy(rgb_image)
+
+    # Loop through the detected poses to visualize.
+    for idx in range(len(pose_landmarks_list)):
+        pose_landmarks = pose_landmarks_list[idx]
+
+        pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+        pose_landmarks_proto.landmark.extend([
+            landmark_pb2.NormalizedLandmark(
+                x=landmark.x,
+                y=landmark.y,
+                z=landmark.z) for landmark in pose_landmarks
+        ])
+        mp.solutions.drawing_utils.draw_landmarks(
+            annotated_image,
+            pose_landmarks_proto,
+            mp.solutions.pose.POSE_CONNECTIONS,
+            mp.solutions.drawing_styles.get_default_pose_landmarks_style())
+    return annotated_image
+
+
+to_window = None
+last_timestamp_ms = 0
+
+
+def print_result(detection_result: vision.PoseLandmarkerResult, output_image: mp.Image,
+                 timestamp_ms: int):
+    global to_window
+    global last_timestamp_ms
+    if timestamp_ms < last_timestamp_ms:
+        return
+    last_timestamp_ms = timestamp_ms
+    # print("pose landmarker result: {}".format(detection_result))
+    to_window = cv2.cvtColor(
+        draw_landmarks_on_image(output_image.numpy_view(), detection_result), cv2.COLOR_RGB2BGR)
+
+
+base_options = python.BaseOptions(model_asset_path=model_path)
+options = vision.PoseLandmarkerOptions(
+    base_options=base_options,
+    running_mode=vision.RunningMode.LIVE_STREAM,
+    num_poses=num_poses,
+    min_pose_detection_confidence=min_pose_detection_confidence,
+    min_pose_presence_confidence=min_pose_presence_confidence,
+    min_tracking_confidence=min_tracking_confidence,
+    output_segmentation_masks=False,
+    result_callback=print_result
+)
+
+with vision.PoseLandmarker.create_from_options(options) as landmarker:
+    # Use OpenCV’s VideoCapture to start capturing from the webcam.
+    cap = cv2.VideoCapture(video_path)
+
+    # Create a loop to read the latest frame from the camera using VideoCapture#read()
+    while cap.isOpened():
+        success, image = cap.read()
+        if not success:
+            print("Image capture failed.")
+            break
+
+        # Convert the frame received from OpenCV to a MediaPipe’s Image object.
+        mp_image = mp.Image(
+            image_format=mp.ImageFormat.SRGB,
+            data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        timestamp_ms = int(cv2.getTickCount() / cv2.getTickFrequency() * 1000)
+        landmarker.detect_async(mp_image, timestamp_ms)
+
+        if to_window is not None:
+            cv2.imshow("MediaPipe Pose Landmark", to_window)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()

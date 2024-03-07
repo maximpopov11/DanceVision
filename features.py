@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -11,12 +13,15 @@ model_path = "pose_landmarker_heavy.task"
 video_path = "West Coast Swing - Ben Morris & Brandi Guild - The After Party 2021 -  Invitational Jack & Jill Show.mp4"
 
 num_poses = 4
-min_pose_detection_confidence = 0.3
-min_pose_presence_confidence = 0.3
-min_tracking_confidence = 0.3
+min_pose_detection_confidence = 0.8
+min_pose_presence_confidence = 0.8
+min_tracking_confidence = 0.8
 
+time = datetime.now().second
+landmarks = []
 
 def draw_landmarks_on_image(rgb_image, detection_result):
+    global time
     pose_landmarks_list = detection_result.pose_landmarks
     annotated_image = np.copy(rgb_image)
 
@@ -36,6 +41,12 @@ def draw_landmarks_on_image(rgb_image, detection_result):
             pose_landmarks_proto,
             mp.solutions.pose.POSE_CONNECTIONS,
             mp.solutions.drawing_styles.get_default_pose_landmarks_style())
+
+        time2 = datetime.now().second
+        if time != time2:
+            time = time2
+            landmarks.append(pose_landmarks_proto.landmark)
+
     return annotated_image
 
 
@@ -91,5 +102,6 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    print(landmarks)
     cap.release()
     cv2.destroyAllWindows()

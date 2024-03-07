@@ -15,7 +15,7 @@ video_path = "West Coast Swing - Ben Morris & Brandi Guild - The After Party 202
 num_poses = 4
 min_pose_detection_confidence = 0.8
 min_pose_presence_confidence = 0.8
-min_tracking_confidence = 0.8
+min_tracking_confidence = 0.9
 
 time = datetime.now().second
 landmarks = []

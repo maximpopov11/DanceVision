@@ -16,8 +16,9 @@ class LightningLSTM(lightning.LightningModule):
         self.lstm = nn.LSTM(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE)
 
     def forward(self, input):
-        input_trans = input.view(len(input), 1)
-        lstm_out, temp = self.lstm(input_trans)
+        for frame in input:
+            input_trans = frame.view(len(frame), 1)
+            lstm_out, temp = self.lstm(input_trans)
         prediction = lstm_out[-1]
         return prediction
 

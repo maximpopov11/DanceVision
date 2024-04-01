@@ -19,6 +19,8 @@ min_tracking_confidence = 0.9
 
 time = datetime.now().second
 landmarks = []
+timestamps = []
+
 
 def draw_landmarks_on_image(rgb_image, detection_result):
     global time
@@ -42,9 +44,12 @@ def draw_landmarks_on_image(rgb_image, detection_result):
             mp.solutions.pose.POSE_CONNECTIONS,
             mp.solutions.drawing_styles.get_default_pose_landmarks_style())
 
+        # TODO: get attributes for both lead and follow and differentiate them
+        # TODO: obtain attributes as fast as you can
         time2 = datetime.now().second
         if time != time2:
             time = time2
+            timestamps.append(time)
             landmarks.append(pose_landmarks_proto.landmark)
 
     return annotated_image

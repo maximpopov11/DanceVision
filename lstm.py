@@ -19,7 +19,7 @@ class LightningLSTM(lightning.LightningModule):
         input_trans = input.view(len(input), INPUT_SIZE)
         lstm_out, _ = self.lstm(input_trans)
         prediction = lstm_out[-1]
-        return prediction[0], prediction[1], prediction[2], prediction[3], prediction[4]
+        return prediction
 
     def configure_optimizers(self):
         return Adam(self.parameters(), lr=LEARNING_RATE)
@@ -31,8 +31,8 @@ class LightningLSTM(lightning.LightningModule):
         for i in range(5):
             if i == label_i:
                 loss += (1 - output_i[i]) ** 2
-            else:
-                loss += (output_i[i]) ** 2
+            # else:
+            #     loss += (output_i[i]) ** 2
 
         # loss = (output_i - label_i) ** 2
 

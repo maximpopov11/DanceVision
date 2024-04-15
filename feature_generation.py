@@ -14,10 +14,10 @@ MIN_POSE_DETECTION_CONFIDENCE = 0.8
 MIN_POSE_PRESENCE_CONFIDENCE = 0.8
 MIN_TRACKING_CONFIDENCE = 0.9
 
-DISPLAY_VIDEO = True
+NUM_LABELS = 38
+VIDEO_PATHS = ["v0_" + str(i) + ".mp4" for i in range(NUM_LABELS)]
 
-# TODO: go through all videos once everything else is good
-VIDEO_PATH = "v0_0.mp4"
+DISPLAY_VIDEO = True
 
 
 # Display video with landmarks drawn
@@ -52,7 +52,7 @@ def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_
 
         frame_features.append(pose_landmark.landmark)
 
-    features.append(frame_features)
+    video_features.append(frame_features)
 
     if DISPLAY_VIDEO:
         global video_window
@@ -75,30 +75,35 @@ options = vision.PoseLandmarkerOptions(
 
 # List for each movement video clip containing list for each detected target containing list of body keypoint landmarks
 features = []
+video_features = []
 
 video_window = None
 with vision.PoseLandmarker.create_from_options(options) as landmarker:
-    video = cv2.VideoCapture(VIDEO_PATH)
+    for video in VIDEO_PATHS:
+        video_features = []
 
-    while video.isOpened():
-        video_ongoing, frame = video.read()
-        if not video_ongoing:
-            break
+        video_capture = cv2.VideoCapture(video)
+        while video_capture.isOpened():
+            video_ongoing, frame = video_capture.read()
+            if not video_ongoing:
+                break
 
-        # Convert the frame received from OpenCV to a MediaPipe’s Image object.
-        mp_image = mp.Image(
-            image_format=mp.ImageFormat.SRGB,
-            data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        timestamp_ms = int(cv2.getTickCount() / cv2.getTickFrequency() * 1000)
-        landmarker.detect_async(mp_image, timestamp_ms)
+            # Convert the frame received from OpenCV to a MediaPipe’s Image object.
+            mp_image = mp.Image(
+                image_format=mp.ImageFormat.SRGB,
+                data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            timestamp_ms = int(cv2.getTickCount() / cv2.getTickFrequency() * 1000)
+            landmarker.detect_async(mp_image, timestamp_ms)
 
-        if video_window is not None:
-            cv2.imshow("MediaPipe Pose Landmark", video_window)
+            if video_window is not None:
+                cv2.imshow("MediaPipe Pose Landmark", video_window)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    video.release()
+        features.append(video_features)
+
+    video_capture.release()
     cv2.destroyAllWindows()
 
 file = open('features.txt', 'w')

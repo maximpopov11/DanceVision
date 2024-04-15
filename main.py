@@ -5,6 +5,8 @@ from lstm import LightningLSTM
 from torch.utils.data import TensorDataset, DataLoader
 
 
+# TODO: cleanup main
+# TODO: train & test model
 if __name__ == '__main__':
     dummy_features = torch.tensor([
         [

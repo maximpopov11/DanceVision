@@ -21,27 +21,13 @@ VIDEO_PATH = "v0_0.mp4"
 
 
 # Display video with landmarks drawn
-def display_annotated_video(rgb_image, detection_result):
-    # TODO: DRY parse_frame_landmarks
+def display_annotated_video(rgb_image, pose_landmarks):
     annotated_image = np.copy(rgb_image)
 
-    # List of 0 to num_poses lists with landmarks for each detected target
-    pose_landmark_list = detection_result.pose_landmarks
-
-    for landmarks in pose_landmark_list:
-        pose_landmark = landmark_pb2.NormalizedLandmarkList()
-
-        pose_landmark.landmark.extend([
-            landmark_pb2.NormalizedLandmark(
-                x=landmark.x,
-                y=landmark.y,
-                z=landmark.z
-            ) for landmark in landmarks
-        ])
-
+    for landmarks in pose_landmarks:
         mp.solutions.drawing_utils.draw_landmarks(
             annotated_image,
-            pose_landmark,
+            landmarks,
             mp.solutions.pose.POSE_CONNECTIONS,
             mp.solutions.drawing_styles.get_default_pose_landmarks_style())
 
@@ -52,6 +38,7 @@ def display_annotated_video(rgb_image, detection_result):
 def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_image: mp.Image, _: int):
     frame_features = []
 
+    pose_landmarks = []
     for landmarks in detection_result.pose_landmarks:
         pose_landmark = landmark_pb2.NormalizedLandmarkList()
         pose_landmark.landmark.extend([
@@ -61,6 +48,7 @@ def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_
                 z=landmark.z
             ) for landmark in landmarks
         ])
+        pose_landmarks.append(pose_landmark)
 
         frame_features.append(pose_landmark.landmark)
 
@@ -69,7 +57,7 @@ def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_
     if DISPLAY_VIDEO:
         global video_window
         video_window = cv2.cvtColor(
-            display_annotated_video(output_image.numpy_view(), detection_result),
+            display_annotated_video(output_image.numpy_view(), pose_landmarks),
             cv2.COLOR_RGB2BGR)
 
 

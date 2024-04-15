@@ -10,7 +10,7 @@ from mediapipe.framework.formats import landmark_pb2
 # Model available to download here: https://developers.google.com/mediapipe/solutions/vision/pose_landmarker#models
 model_path = "pose_landmarker_heavy.task"
 
-video_path = "v1.mp4"
+video_path = "v0_0.mp4"
 
 num_poses = 4
 min_pose_detection_confidence = 0.8

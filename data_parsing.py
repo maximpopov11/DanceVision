@@ -34,5 +34,6 @@ def clip_videos():
             ffmpeg_extract_subclip(f"v{i}.mp4", clips[i][j], clips[i][j+1], targetname=f"v{i}_{j}.mp4")
 
 
-download_videos()
-clip_videos()
+def parse_data():
+    download_videos()
+    clip_videos()

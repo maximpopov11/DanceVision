@@ -4,7 +4,8 @@ from torch.optim import Adam
 import lightning
 
 SEED = 0
-INPUT_SIZE = 33 * 2
+# 33 landmark x, y, z for 3 targets (2 targets and 0 or 0's and 1 target)
+INPUT_SIZE = 33 * 3 * 3
 HIDDEN_SIZE = 5
 LEARNING_RATE = 0.1
 

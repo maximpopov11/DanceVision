@@ -54,16 +54,6 @@ def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_
             frame_features += [landmark.x, landmark.y, landmark.z]
         landmarks.append(pose_landmark.landmark)
 
-    # Either 66 real and 33 0's if 2 targets found, 66 0's and 33 real if 1 found, 99 0's if 0 found
-    if len(frame_features) == 33 * 3 * 2:
-        frame_features += [0] * 33 * 3
-    elif len(frame_features) == 33 * 3:
-        frame_features = [0] * 33 * 3 * 2 + frame_features
-    elif len(frame_features) == 0:
-        frame_features = [0] * 33 * 3 * 3
-    else:
-        raise ValueError(f"Number of frame features is not 66 or 33 or 0 but rather {len(frame_features)}")
-
     video_features.append(frame_features)
 
     if displaying_video:
@@ -71,6 +61,24 @@ def parse_frame_landmarks(detection_result: vision.PoseLandmarkerResult, output_
         video_window = cv2.cvtColor(
             display_annotated_video(output_image.numpy_view(), pose_landmarks),
             cv2.COLOR_RGB2BGR)
+
+
+# Formatting is necessary for feeding into the LSTM: all subarrays must be of the same length
+def format_features(features):
+    clip_length = max(map(len, features))
+    for i in range(len(features)):
+        for j in range(len(features[i])):
+            # Either 66 real and 33 0's if 2 targets found, 66 0's and 33 real if 1 found, 99 0's if 0 found
+            if len(features[i][j]) == 33 * 3 * 2:
+                features[i][j] += [0] * 33 * 3
+            elif len(features[i][j]) == 33 * 3:
+                features[i][j] = [0] * 33 * 3 * 2 + features[i][j]
+            elif len(features[i][j]) == 0:
+                features[i][j] = [0] * 33 * 3 * 3
+            else:
+                raise ValueError(f"Number of frame features is not 66 or 33 or 0 but rather {len(features[i][j])}")
+        for _ in range(clip_length - len(features[i])):
+            features[i].append([0] * 33 * 3 * 3)
 
 
 base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
@@ -124,6 +132,8 @@ def generate_features(videos, display_video=False, print_to_file=False):
 
         video_capture.release()
         cv2.destroyAllWindows()
+
+    format_features(features)
 
     if print_to_file:
         file = open('features.txt', 'w')

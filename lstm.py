@@ -28,6 +28,7 @@ class LightningLSTM(lightning.LightningModule):
     def training_step(self, batch, batch_idx):
         input_i, label_i = batch
         output_i = self.forward(input_i[0])
+        # TODO: choose strong loss function
         loss = 0
         for i in range(5):
             if i == label_i:
@@ -37,6 +38,7 @@ class LightningLSTM(lightning.LightningModule):
 
         # loss = (output_i - label_i) ** 2
 
+        # TODO: graph training results
         # self.log("train_loss", loss)
         #
         # if label_i == 0:

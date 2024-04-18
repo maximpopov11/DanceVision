@@ -1,4 +1,5 @@
 import lightning
+import sys
 import torch
 
 from data_parsing import labels
@@ -23,6 +24,13 @@ if __name__ == '__main__':
     trainer = lightning.Trainer(max_epochs=EPOCHS, log_every_n_steps=LOG_STEPS)
     trainer.fit(model, train_dataloaders=dataloader)
 
-    # TODO: print results nicely
-    for i in range(len(labels)):
-        print("Sample " + str(i) + ", Label: " + labels[0][i].clone().detach() + ", Predicted: ", model(features[0][i].clone().detach()))
+    for i in range(len(labels[0])):
+        predictions = model(features[0].clone().detach())
+        max_predicted = float('-inf')
+        predicted = -1
+        for j in range(len(predictions)):
+            value = predictions[j]
+            if value > max_predicted:
+                max_predicted = value
+                predicted = j
+        print("Sample " + str(i) + ", Label: " + str(labels[0][i].item()) + ", Predicted: " + str(predicted))

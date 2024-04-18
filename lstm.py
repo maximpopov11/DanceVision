@@ -28,7 +28,8 @@ class LightningLSTM(lightning.LightningModule):
     def training_step(self, batch, batch_idx):
         input_i, label_i = batch
         output_i = self.forward(input_i[0])
-        # TODO: choose strong loss function
+        # TODO: What is the best loss function?
+        # TODO: Should the prediction be the greatest output? Output closest to 1? Other?
         loss = 0
         for i in range(5):
             if i == label_i:

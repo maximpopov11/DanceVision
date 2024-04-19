@@ -8,11 +8,11 @@ from torch.utils.data import TensorDataset, DataLoader
 
 VIDEO_PATHS = ["v0_" + str(i) + ".mp4" for i in range(len(labels[0]))]
 EPOCHS = 300
-LOG_STEPS = 10
+LOG_STEPS = 1
 
 if __name__ == '__main__':
     # TODO: train/test sets
-    # TODO: if accuracy is subpar tune hyperparameters and use other strategies
+    # TODO: improve accuracy
     features = torch.tensor(generate_features(VIDEO_PATHS))
     labels = torch.tensor(labels)
 

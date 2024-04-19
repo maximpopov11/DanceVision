@@ -30,7 +30,6 @@ class LightningLSTM(lightning.LightningModule):
     def training_step(self, batch, batch_idx):
         input_i, label_i = batch
         output_i = self.forward(input_i[0])
-        # TODO: use cross entropy loss weight parameter for unbalanced input classes
 
         # For cross entropy loss
         label_i = label_i.flatten().type(torch.LongTensor)
@@ -38,26 +37,18 @@ class LightningLSTM(lightning.LightningModule):
 
         loss = self.loss(output_i, label_i)
 
-        # TODO: don't print eventually
-        print(loss.item())
-
-        self.writer.add_scalar("Loss/train", loss, self.current_epoch)
+        if label_i == 0:
+            self.writer.add_scalar("0", loss, self.current_epoch)
+        elif label_i == 1:
+            self.writer.add_scalar("1", loss, self.current_epoch)
+        elif label_i == 2:
+            self.writer.add_scalar("2", loss, self.current_epoch)
+        elif label_i == 3:
+            self.writer.add_scalar("3", loss, self.current_epoch)
+        elif label_i == 4:
+            self.writer.add_scalar("4", loss, self.current_epoch)
+        else:
+            print("label out of scope: ", label_i)
         self.writer.flush()
-
-        # TODO: graph training results
-        # self.log("train_loss", loss)
-        #
-        # if label_i == 0:
-        #     self.log("out_0", output_i)
-        # elif label_i == 1:
-        #     self.log("out_1", output_i)
-        # elif label_i == 2:
-        #     self.log("out_2", output_i)
-        # elif label_i == 3:
-        #     self.log("out_3", output_i)
-        # elif label_i == 4:
-        #     self.log("out_4", output_i)
-        # else:
-        #     print("label out of scope: ", label_i)
 
         return loss

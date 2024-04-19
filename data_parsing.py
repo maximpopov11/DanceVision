@@ -22,6 +22,8 @@ labels = [
     [4, 1, 0, 1, 1, 4, 0, 2, 0, 3, 3, 0, 1, 2, 4, 0, 0, 4, 1, 1, 0, 1, 1, 3, 4, 0, 0, 2, 1, 3, 0, 1, 0, 0, 2, 3, 4, 0]
 ]
 
+label_weights = [38/13, 38/10, 38/4, 38/5, 38/6]
+
 
 def download_videos():
     for i, video in enumerate(videos):

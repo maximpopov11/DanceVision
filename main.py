@@ -1,5 +1,4 @@
 import lightning
-import sys
 import torch
 
 from data_parsing import labels
@@ -14,6 +13,7 @@ LOG_STEPS = 1
 
 if __name__ == '__main__':
     # TODO: train/test sets
+    # TODO: if accuracy is subpar tune hyperparameters and use other strategies
     features = torch.tensor(generate_features(VIDEO_PATHS))
     labels = torch.tensor(labels)
 

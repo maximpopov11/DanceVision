@@ -1,7 +1,5 @@
-import torch.nn as nn
-from torch.optim import Adam
-
 import lightning
+import torch
 
 SEED = 0
 # 33 landmark x, y, z for 3 targets (2 targets and 0 or 0's and 1 target)
@@ -14,7 +12,8 @@ class LightningLSTM(lightning.LightningModule):
     def __init__(self):
         super().__init__()
         lightning.seed_everything(seed=SEED)
-        self.lstm = nn.LSTM(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE)
+        self.lstm = torch.nn.LSTM(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE)
+        self.loss = torch.nn.CrossEntropyLoss()
 
     def forward(self, input):
         input_trans = input.view(len(input), INPUT_SIZE)
@@ -23,21 +22,18 @@ class LightningLSTM(lightning.LightningModule):
         return prediction
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=LEARNING_RATE)
+        return torch.optim.Adam(self.parameters(), lr=LEARNING_RATE)
 
     def training_step(self, batch, batch_idx):
         input_i, label_i = batch
         output_i = self.forward(input_i[0])
-        # TODO: What is the best loss function?
-        # TODO: Should the prediction be the greatest output? Output closest to 1? Other?
-        loss = 0
-        for i in range(5):
-            if i == label_i:
-                loss += (1 - output_i[i]) ** 2
-            # else:
-            #     loss += (output_i[i]) ** 2
+        # TODO: use cross entropy loss weight parameter for unbalanced input classes
 
-        # loss = (output_i - label_i) ** 2
+        # For cross entropy loss
+        label_i = label_i.flatten().type(torch.LongTensor)
+        output_i = output_i.unsqueeze(0).type(torch.FloatTensor)
+
+        loss = self.loss(output_i, label_i)
 
         # TODO: graph training results
         # self.log("train_loss", loss)

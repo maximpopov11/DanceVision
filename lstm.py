@@ -5,7 +5,7 @@ SEED = 0
 # 33 landmark x, y, z for 3 targets (2 targets and 0 or 0's and 1 target)
 INPUT_SIZE = 33 * 3 * 3
 HIDDEN_SIZE = 5
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.01
 
 
 class LightningLSTM(lightning.LightningModule):
@@ -34,6 +34,8 @@ class LightningLSTM(lightning.LightningModule):
         output_i = output_i.unsqueeze(0).type(torch.FloatTensor)
 
         loss = self.loss(output_i, label_i)
+
+        print(loss.item())
 
         # TODO: graph training results
         # self.log("train_loss", loss)

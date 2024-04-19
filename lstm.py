@@ -1,6 +1,8 @@
 import lightning
 import torch
 
+from torch.utils.tensorboard import SummaryWriter
+
 SEED = 0
 # 33 landmark x, y, z for 3 targets (2 targets and 0 or 0's and 1 target)
 INPUT_SIZE = 33 * 3 * 3
@@ -14,6 +16,7 @@ class LightningLSTM(lightning.LightningModule):
         lightning.seed_everything(seed=SEED)
         self.lstm = torch.nn.LSTM(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE)
         self.loss = torch.nn.CrossEntropyLoss()
+        self.writer = SummaryWriter()
 
     def forward(self, input):
         input_trans = input.view(len(input), INPUT_SIZE)
@@ -35,7 +38,11 @@ class LightningLSTM(lightning.LightningModule):
 
         loss = self.loss(output_i, label_i)
 
+        # TODO: don't print eventually
         print(loss.item())
+
+        self.writer.add_scalar("Loss/train", loss, self.current_epoch)
+        self.writer.flush()
 
         # TODO: graph training results
         # self.log("train_loss", loss)

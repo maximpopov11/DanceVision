@@ -8,8 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 VIDEO_PATHS = ["v0_" + str(i) + ".mp4" for i in range(len(labels[0]))]
 EPOCHS = 300
-LOG_STEPS = 1
-
+LOG_STEPS = 10
 
 if __name__ == '__main__':
     # TODO: train/test sets
